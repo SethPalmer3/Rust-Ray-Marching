@@ -13,29 +13,6 @@ impl Camera {
         Camera { position, view_direction, near_plane_dist, camera_angle, resolution }
     }
 
-    // pub fn get_near_plane_point(&self, r: u32, c: u32) -> (Point3D, Vector3D){
-    //     let horz_theta: f64 = self.camera_angle * (((r as f64 * 2.0) / self.resolution.0 as f64) - 1.0);
-    //     let horz_delta = Vector3D::new(
-    //         horz_theta.cos(),
-    //         0.0,
-    //         horz_theta.sin()
-    //     );
-    //     let aspect_ratio = (self.resolution.1 ) as f64 / (self.resolution.0 ) as f64;
-    //     let camera_angle_adj = self.camera_angle * aspect_ratio;
-    //     let vert_theta: f64 = camera_angle_adj * (((2.0 * c as f64) / self.resolution.1 as f64) - 1.0);
-    //     let vert_delta = Vector3D::new(
-    //         vert_theta.cos(),
-    //         vert_theta.sin(),
-    //         0.0
-    //     );
-    //     let d = (self.view_direction.clone() + horz_delta + vert_delta).get_norm();
-    //     let vector_angle = Vector3D::get_dot(&self.view_direction, &d) / (self.view_direction.length() * d.length());
-    //     let projection_dist = self.near_plane_dist / vector_angle;
-    //     let p = (d.clone() * projection_dist).to_point();
-
-    //     (p, d)
-    // }
-
     pub fn get_near_plane_point(&self, r: u32, c: u32) -> (Point3D, Vector3D){
         let pos_delta = self.view_direction * self.near_plane_dist; // init direction
 

@@ -1,6 +1,6 @@
 use std::ops;
 
-#[derive(Clone, PartialEq, Debug)]
+#[derive(Copy, Clone, PartialEq, Debug)]
 pub struct Color {
     r: f64,
     g: f64,
@@ -47,6 +47,49 @@ impl Color{
         self.r = self.r.clamp(0.0, 1.0);
         self.g = self.g.clamp(0.0, 1.0);
         self.b = self.b.clamp(0.0, 1.0);
+    }
+
+    #[allow(dead_code)]
+    fn rgb_to_hsl(&self) -> Self {
+        let r = self.r;
+        let g = self.g;
+        let b = self.b;
+
+        let max = r.max(g.max(b));
+        let min = r.min(g.min(b));
+        let l = (max + min) / 2.0;
+
+        if max == min {
+            // achromatic case (no saturation)
+            Self{r: 0.0, g: 0.0, b: l}
+        } else {
+            let d = max - min;
+            let s = if l > 0.5 {
+                d / (2.0 - max - min)
+            } else {
+                d / (max + min)
+            };
+
+            let h = if r == max {
+                (g - b) / d + if g < b { 6.0 } else { 0.0 }
+            } else if g == max {
+                (b - r) / d + 2.0
+            } else {
+                (r - g) / d + 4.0
+            };
+
+            Self{r: (h * 60.0) % 360.0, g: s, b: l}
+        }
+    }
+
+    pub fn blend_colors(color1: &Self, color2: &Self, ratio: f64) -> Self{
+        let col1 = color1.clone();
+        let col2 = color2.clone();
+        let mut first_part = (col1 * col1 * (1.0 - ratio)) + (col2 * col2 * ratio);
+        first_part.r = first_part.r.sqrt();
+        first_part.g = first_part.g.sqrt();
+        first_part.b = first_part.b.sqrt();
+        first_part
     }
 
 }

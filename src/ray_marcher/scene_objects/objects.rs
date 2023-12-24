@@ -1,7 +1,7 @@
 use crate::ray_marcher::color_data_types::Color;
 
 // use std::cmp;
-use super::{Point3D, Vector3D, SurfaceMaterial, SceneObject};
+use super::{Point3D, SurfaceMaterial, SceneObject};
 
 #[derive(Clone)]
 pub struct Sphere{
@@ -36,6 +36,7 @@ impl SceneObject for Sphere {
 #[cfg(test)]
 mod test {
     use super::*;
+    use super::super::Vector3D;
 
     #[test]
     fn test_sphere_sdf_x(){

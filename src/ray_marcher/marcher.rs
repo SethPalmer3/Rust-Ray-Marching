@@ -7,9 +7,9 @@ use super::camera;
 #[allow(dead_code)]
 const RAY_STEPS: i32 = 3;
 #[allow(dead_code)]
-const MIN_HIT_DIST: f64 = 0.001;
+const MIN_HIT_DIST: f64 = 1e-12;
 #[allow(dead_code)]
-const EPSILON: f64 = 0.01;
+const EPSILON: f64 = 1e-7;
 
 
 #[allow(dead_code)]
@@ -42,7 +42,7 @@ impl MarcherHandler {
         for c in 0..self.camera.resolution.1{
             for r in 0..self.camera.resolution.0{
                 let (p, d) = self.camera.get_near_plane_point(r, c);
-                self.add_ray(ray::Ray::new(p, d, self.num_bounces as i32));
+                self.add_ray(ray::Ray::new(p, d));
             }
         }
     }
@@ -56,11 +56,11 @@ impl MarcherHandler {
                         if self.debug {
                             let n = obj.get_surface_normal(&ray.get_position(), EPSILON).get_norm().to_point();
                             ray.color = Color::new(n.x, n.y, n.z);
+                            ray.stop();
                         }else{
-                            ray.color *= obj.get_surface_material().color;
+                            ray.color = Color::blend_colors(&obj.get_surface_material().color, &ray.color, 0.5);
                         }
-                        // ray.reflect(&obj.get_surface_normal(ray.get_position(), EPSILON))
-                        ray.stop();
+                        ray.reflect(&obj.get_surface_normal(ray.get_position(), EPSILON));
                     }
                     ray.step(distance);
                 }
@@ -75,7 +75,7 @@ impl MarcherHandler {
     pub fn get_color(&self, x: u32, y: u32) -> Color {
         let (rows, _cols) = self.camera.get_resolution();
         let index = (x * rows) + y;
-        self.rays.get(index as usize).unwrap().color.clone()
+        self.rays.get(index as usize).unwrap().get_color()
     }
 }
 

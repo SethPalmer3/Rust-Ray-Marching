@@ -52,7 +52,8 @@ impl MarcherHandler {
             for ray in self.rays.iter_mut(){
                 let closest_obj = self.scene.get_closest_object(ray.get_position());
                 if let Some(ClosestObject { distance, obj }) = closest_obj{
-                    if distance <= MIN_HIT_DIST{
+                    ray.step(distance);
+                    if distance < MIN_HIT_DIST{
                         if self.debug {
                             let n = obj.get_surface_normal(&ray.get_position(), EPSILON).get_norm().to_point();
                             ray.color = Color::new(n.x, n.y, n.z);
@@ -62,7 +63,6 @@ impl MarcherHandler {
                         }
                         ray.reflect(&obj.get_surface_normal(ray.get_position(), EPSILON));
                     }
-                    ray.step(distance);
                 }
             }
             self.num_bounces -= 1;

@@ -5,7 +5,7 @@ use image::{self, RgbImage};
 
 fn main() {
     let camera = ray_marcher::camera::Camera::new(Point::new(0.0, 0.0, 0.0), Vector3D::new(1.0, 0.0, 0.0).get_norm(), 1.0, 60_f64.to_radians(), (600, 600));
-    let mut march_handler = ray_marcher::marcher::MarcherHandler::new(100, camera);
+    let mut march_handler = ray_marcher::marcher::MarcherHandler::new(1000, camera);
     // march_handler.debug = true;
     march_handler.add_scene_object(Sphere::new(Point::new(30.0, 0.0, 0.0), 10.0, Some(SurfaceMaterial{ color: Color::new(1.0, 0.5, 0.0)})));
     // march_handler.add_scene_object(Sphere::new(Point::new(20.0, 10.0, 0.0), 10.0, Some(SurfaceMaterial{ color: Color::new(0.0, 1.0, 0.0)})));

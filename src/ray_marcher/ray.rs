@@ -39,6 +39,9 @@ impl Ray {
     pub fn stop(&mut self){
         self.must_stop = true;
     }
+    pub fn has_stopped(&self) -> bool {
+        self.must_stop
+    }
     pub fn get_color(&self) -> Color{
         if self.num_hits > 0 {
             return self.color.clone();

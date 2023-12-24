@@ -5,9 +5,11 @@ use super::ray;
 use super::camera;
 
 #[allow(dead_code)]
-const RAY_STEPS: i32 = 3;
+const MAX_HITS: i32 = 10;
 #[allow(dead_code)]
-const MIN_HIT_DIST: f64 = 1e-12;
+pub const MIN_HIT_DIST: f64 = 1e-12;
+#[allow(dead_code)]
+pub const MAX_DISTANCE: f64 = 1e7;
 #[allow(dead_code)]
 const EPSILON: f64 = 1e-7;
 
@@ -15,6 +17,7 @@ const EPSILON: f64 = 1e-7;
 #[allow(dead_code)]
 pub struct MarcherHandler{
     num_bounces: u32,
+    max_distance: f64,
     rays: Vec<ray::Ray>,
     scene: Scene<objects::Sphere>,
     camera: camera::Camera,
@@ -24,10 +27,14 @@ pub struct MarcherHandler{
 #[allow(dead_code)]
 impl MarcherHandler {
 
-    pub fn new(num_bounces: u32, camera: camera::Camera) -> Self {
-        let mut ret = MarcherHandler { num_bounces, rays: Vec::<ray::Ray>::new(), scene: Scene::new(), camera, debug: false };
+    pub fn new(num_bounces: u32, max_distance: f64, camera: camera::Camera) -> Self {
+        let mut ret = MarcherHandler { num_bounces, rays: Vec::<ray::Ray>::new(), scene: Scene::new(), camera, debug: false, max_distance };
         ret.generate_rays();
         return ret;
+    }
+
+    pub fn get_camera(&self) -> &camera::Camera{
+        &self.camera
     }
 
     pub fn add_scene_object(&mut self, o: objects::Sphere){
@@ -49,10 +56,19 @@ impl MarcherHandler {
 
     pub fn march(&mut self){
         loop{
-            for ray in self.rays.iter_mut(){
+            for (i, ray) in self.rays.iter_mut().enumerate(){
+                if ray.has_stopped() {
+                    println!("stopped - {}", i);
+                    continue;
+                }
                 let closest_obj = self.scene.get_closest_object(ray.get_position());
                 if let Some(ClosestObject { distance, obj }) = closest_obj{
+                    println!("{} - {}", distance, i);
                     ray.step(distance);
+                    if distance >= MAX_DISTANCE || ray.get_num_hits() > MAX_HITS{
+                        ray.stop();
+                        continue;
+                    }
                     if distance < MIN_HIT_DIST{
                         if self.debug {
                             let n = obj.get_surface_normal(&ray.get_position(), EPSILON).get_norm().to_point();
@@ -62,6 +78,8 @@ impl MarcherHandler {
                             ray.color = Color::blend_colors(&obj.get_surface_material().color, &ray.color, 0.5);
                         }
                         ray.reflect(&obj.get_surface_normal(ray.get_position(), EPSILON));
+                        // FIXME: Reflections seem to not work very well
+                        // ray.step(2.0 * (MIN_HIT_DIST - distance));
                     }
                 }
             }
@@ -90,7 +108,7 @@ mod test{
     // #[ignore = "Could be computationally expensive"]
     fn test_march_one_pixel(){
         let camera = camera::Camera::new(Const_3D::ORIGIN, Const_3D::X_DIR, 0.1, 0.0, (1,1));
-        let mut marcher = MarcherHandler::new(100, camera);
+        let mut marcher = MarcherHandler::new(100, MAX_DISTANCE, camera);
         let sphere = Sphere::new(Point3D::new(10.0, 0.0, 0.0), 1.0, Some(SurfaceMaterial{ color: Color::new(1.0, 0.0, 0.0)}));
         marcher.add_scene_object(sphere);
         marcher.march();
@@ -101,7 +119,7 @@ mod test{
     // #[ignore = "Could be computationally expensive"]
     fn test_march_two_pixels(){
         let camera = camera::Camera::new(Const_3D::ORIGIN, Const_3D::X_DIR, 0.1, 1.0_f64.to_radians(), (2,1));
-        let mut marcher = MarcherHandler::new(100, camera);
+        let mut marcher = MarcherHandler::new(100, MAX_DISTANCE, camera);
         let sphere = Sphere::new(Point3D::new(10.0, 0.0, 0.0), 1.0, Some(SurfaceMaterial{ color: Color::new(1.0, 0.0, 0.0)}));
         marcher.add_scene_object(sphere);
         marcher.march();

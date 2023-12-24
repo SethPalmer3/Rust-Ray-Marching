@@ -125,6 +125,33 @@ impl Direction {
     pub fn get_dot(d1: &Self, d2: &Self) -> f64 {
         d1.x*d2.x + d1.y*d2.y + d1.z*d2.z
     }
+    pub fn rotate_vector_around_z(&mut self, around_z: f64){
+        let len = self.length();
+        let current_around_z = (self.y / self.x).atan();
+
+        let x_delta = len * (current_around_z + around_z).cos();
+        let y_delta = len * (current_around_z + around_z).sin();
+
+        self.x = x_delta;
+        self.y = y_delta;
+    }
+    pub fn rotate_vector_around_y(&mut self, around_y: f64){
+        let len = self.length();
+        let current_around_y = (self.x / self.z).atan();
+
+        let x_delta = len * (current_around_y + around_y).sin();
+        let z_delta = len * (current_around_y + around_y).cos();
+
+        self.x = x_delta;
+        self.z = z_delta;
+    }
+    pub fn rotate_vector(&mut self, around_z: f64, around_y: f64){
+        self.rotate_vector_around_z(around_z);
+        self.rotate_vector_around_y(around_y);
+    }
+    pub fn set_norm(&mut self){
+        *self = self.get_norm();
+    }
 }
 
 macro_rules! impl_ops_assign_for_direction {
@@ -229,6 +256,46 @@ mod test {
         let dir2 = Point::new(-1.0, -1.0, 0.0);
         let expected_dist = 2.0 * (2_f64.sqrt());
         assert!((expected_dist - dir1.distance_to(&dir2).abs()).abs() < 0.0001);
+    }
+
+    #[test]
+    fn test_rotation_90_degrees_around_z(){
+        let mut dir = Direction::new(1.0, 0.0, 0.0);
+        dir.rotate_vector_around_z(90_f64.to_radians());
+        println!("{:?}", dir);
+        assert!((dir - Direction::new(0.0, 1.0, 0.0)).length() < 0.0001);
+    }
+
+    #[test]
+    fn test_rotation_around_z_on_z(){
+        let mut dir = Direction::new(0.0, 0.0, 1.0);
+        dir.rotate_vector_around_z(90_f64.to_radians());
+        println!("{:?}", dir);
+        assert!((dir - Direction::new(0.0, 0.0, 1.0)).length() < 0.0001);
+    }
+
+    #[test]
+    fn test_rotation_90_degrees_around_y(){
+        let mut dir = Direction::new(1.0, 0.0, 0.0);
+        dir.rotate_vector_around_y(90_f64.to_radians());
+        println!("{:?}", dir);
+        assert!((dir - Direction::new(0.0, 0.0, -1.0)).length() < 0.0001);
+    }
+
+    #[test]
+    fn test_rotation_around_y_on_y(){
+        let mut dir = Direction::new(0.0, 1.0, 0.0);
+        dir.rotate_vector_around_y(90_f64.to_radians());
+        println!("{:?}", dir);
+        assert!((dir - Direction::new(0.0, 1.0, 0.0)).length() < 0.0001);
+    }
+
+    #[test]
+    fn test_rotation_90_degrees_x_y(){
+        let mut dir = Direction::new(1.0, 0.0, 0.0);
+        dir.rotate_vector(90_f64.to_radians(), 90_f64.to_radians());
+        println!("{:?}", dir);
+        assert!((dir - Direction::new(0.0, 1.0, 0.0)).length() < 0.0001);
     }
 
 }

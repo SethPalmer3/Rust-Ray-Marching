@@ -4,10 +4,11 @@ use ray_marcher::{threed_data_types::{Point, Direction as Vector3D}, scene_objec
 use image::{self, RgbImage};
 
 fn main() {
-    let camera = ray_marcher::camera::Camera::new(Point::new(0.0, 0.0, 0.0), Vector3D::new(1.0, 0.0, 0.0), 0.1, 60_f64.to_radians(), (600, 600));
+    let camera = ray_marcher::camera::Camera::new(Point::new(0.0, 0.0, 0.0), Vector3D::new(1.0, 0.0, 0.0).get_norm(), 0.1, 30_f64.to_radians(), (600, 600));
     let mut march_handler = ray_marcher::marcher::MarcherHandler::new(100, camera);
-    march_handler.debug = true;
-    march_handler.add_scene_object(Sphere::new(Point::new(30.0, 0.0, 0.0), 5.0, Some(SurfaceMaterial{ color: Color::new(1.0, 0.5, 0.0)})));
+    // march_handler.debug = true;
+    march_handler.add_scene_object(Sphere::new(Point::new(20.0, 0.0, 0.0), 5.0, Some(SurfaceMaterial{ color: Color::new(1.0, 0.5, 0.0)})));
+    march_handler.add_scene_object(Sphere::new(Point::new(10.0, 10.0, 0.0), 5.0, Some(SurfaceMaterial{ color: Color::new(0.0, 1.0, 0.0)})));
     march_handler.march();
 
     let mut image_buf: RgbImage = image::ImageBuffer::new(600, 600);

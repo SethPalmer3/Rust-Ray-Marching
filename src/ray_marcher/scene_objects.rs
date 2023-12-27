@@ -1,6 +1,7 @@
 pub mod objects;
 use super::Point3D;
 use super::Vector3D;
+use super::color_data_types::BLACK;
 use super::color_data_types::Color;
 
 pub trait SceneObject {
@@ -18,7 +19,9 @@ pub trait SceneObject {
 }
 
 #[allow(dead_code)]
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct SurfaceMaterial {
     pub color: Color,
+    pub reflectivity: f64,
 }
+pub static DEFAULT_SURFACEMAT: SurfaceMaterial = SurfaceMaterial{ color: BLACK, reflectivity: 1.0 };

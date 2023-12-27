@@ -1,3 +1,10 @@
+use std::f64::consts::PI;
+
+use rand::Rng;
+
+use rayon;
+use rayon::iter::{IntoParallelRefMutIterator, ParallelIterator};
+
 use super::color_data_types::Color;
 use super::scene::{Scene, ClosestObject};
 use super::scene_objects::{objects, SceneObject};
@@ -12,11 +19,14 @@ pub const MIN_HIT_DIST: f64 = 1e-12;
 pub const MAX_DISTANCE: f64 = 1e7;
 #[allow(dead_code)]
 const EPSILON: f64 = 1e-7;
+#[allow(dead_code)]
+const MIN_ANGLE: f64 = (0.1_f64 * 180_f64) / PI;
 
 
 #[allow(dead_code)]
 pub struct MarcherHandler{
-    num_bounces: u32,
+    num_steps: u32,
+    num_iterations: u32,
     max_distance: f64,
     rays: Vec<ray::Ray>,
     scene: Scene<objects::Sphere>,
@@ -27,8 +37,8 @@ pub struct MarcherHandler{
 #[allow(dead_code)]
 impl MarcherHandler {
 
-    pub fn new(num_bounces: u32, max_distance: f64, camera: camera::Camera) -> Self {
-        let mut ret = MarcherHandler { num_bounces, rays: Vec::<ray::Ray>::new(), scene: Scene::new(), camera, debug: false, max_distance };
+    pub fn new(num_bounces: u32, max_distance: f64, num_iterations: u32, camera: camera::Camera) -> Self {
+        let mut ret = MarcherHandler { num_steps: num_bounces, rays: Vec::<ray::Ray>::new(), scene: Scene::new(), camera, debug: false, max_distance, num_iterations };
         ret.generate_rays();
         return ret;
     }
@@ -55,19 +65,20 @@ impl MarcherHandler {
     }
 
     pub fn march(&mut self){
+        let num_bounce_const = self.num_steps;
         loop{
-            for (i, ray) in self.rays.iter_mut().enumerate(){
+            self.rays.par_iter_mut().for_each(|ray| {
                 if ray.has_stopped() {
-                    println!("stopped - {}", i);
-                    continue;
+                    // println!("stopped - {}", i);
+                    return;
                 }
                 let closest_obj = self.scene.get_closest_object(ray.get_position());
                 if let Some(ClosestObject { distance, obj }) = closest_obj{
-                    println!("{} - {}", distance, i);
+                    // println!("{} - {}", distance, i);
                     ray.step(distance);
                     if distance >= MAX_DISTANCE || ray.get_num_hits() > MAX_HITS{
                         ray.stop();
-                        continue;
+                        return;
                     }
                     if distance < MIN_HIT_DIST{
                         if self.debug {
@@ -77,15 +88,18 @@ impl MarcherHandler {
                         }else{
                             ray.color = Color::blend_colors(&obj.get_surface_material().color, &ray.color, 0.5);
                         }
-                        ray.reflect(&obj.get_surface_normal(ray.get_position(), EPSILON));
-                        // FIXME: Reflections seem to not work very well
-                        // ray.step(2.0 * (MIN_HIT_DIST - distance));
+                        ray.scatter(&obj.get_surface_normal(ray.get_position(), EPSILON), &obj.get_surface_material(), 120_f64.to_radians(), 0.001);
                     }
                 }
-            }
-            self.num_bounces -= 1;
-            if self.num_bounces <= 0 {
-                break;
+            });
+            self.num_steps -= 1;
+            if self.num_steps <= 0 {
+                self.num_iterations -= 1;
+                self.num_steps = num_bounce_const;
+                self.reset_rays();
+                if self.num_iterations <= 0 {
+                    break;
+                }
             }
         }
     }
@@ -94,6 +108,27 @@ impl MarcherHandler {
         let (rows, _cols) = self.camera.get_resolution();
         let index = (x * rows) + y;
         self.rays.get(index as usize).unwrap().get_color()
+    }
+
+    fn index_to_res_coords(cam_row: u32, cam_col: u32, i: usize) -> (u32, u32){
+        let c = i as u32 / cam_col;
+        let r = i as u32 % cam_row;
+        (r, c)
+    }
+
+    fn reset_rays(&mut self){
+        let (cam_row, cam_col) = self.camera.get_resolution();
+        for (i, ray) in self.rays.iter_mut().enumerate(){
+            let (r, c) = Self::index_to_res_coords(cam_row, cam_col, i);
+            let (p, mut d) = self.camera.get_near_plane_point(r, c);
+
+            let mut rng = rand::thread_rng();
+            let rand_y = (rng.gen::<f64>() * 2.0) - 1.0;
+            let rand_z = (rng.gen::<f64>() * 2.0) - 1.0;
+            d.rotate_vector(rand_z * MIN_ANGLE, rand_y * MIN_ANGLE);
+            ray.set_position(p);
+            ray.set_direction(d);
+        }
     }
 }
 
@@ -105,11 +140,23 @@ mod test{
     use super::super::*;
 
     #[test]
+    fn test_index_to_coords_r(){
+        let (r, _c) = MarcherHandler::index_to_res_coords(100, 100, 2);
+        assert_eq!(r, 2);
+    }
+
+    #[test]
+    fn test_index_to_coords_c(){
+        let (_r, c) = MarcherHandler::index_to_res_coords(100, 100, 2);
+        assert_eq!(c, 0);
+    }
+
+    #[test]
     // #[ignore = "Could be computationally expensive"]
     fn test_march_one_pixel(){
         let camera = camera::Camera::new(Const_3D::ORIGIN, Const_3D::X_DIR, 0.1, 0.0, (1,1));
-        let mut marcher = MarcherHandler::new(100, MAX_DISTANCE, camera);
-        let sphere = Sphere::new(Point3D::new(10.0, 0.0, 0.0), 1.0, Some(SurfaceMaterial{ color: Color::new(1.0, 0.0, 0.0)}));
+        let mut marcher = MarcherHandler::new(100, MAX_DISTANCE, 1, camera);
+        let sphere = Sphere::new(Point3D::new(10.0, 0.0, 0.0), 1.0, Some(SurfaceMaterial{ color: Color::new(1.0, 0.0, 0.0), reflectivity: 1.0 }));
         marcher.add_scene_object(sphere);
         marcher.march();
         let(r, _g, _b) = marcher.get_color(0, 0).get_u8_components();
@@ -119,8 +166,8 @@ mod test{
     // #[ignore = "Could be computationally expensive"]
     fn test_march_two_pixels(){
         let camera = camera::Camera::new(Const_3D::ORIGIN, Const_3D::X_DIR, 0.1, 1.0_f64.to_radians(), (2,1));
-        let mut marcher = MarcherHandler::new(100, MAX_DISTANCE, camera);
-        let sphere = Sphere::new(Point3D::new(10.0, 0.0, 0.0), 1.0, Some(SurfaceMaterial{ color: Color::new(1.0, 0.0, 0.0)}));
+        let mut marcher = MarcherHandler::new(100, MAX_DISTANCE, 1, camera);
+        let sphere = Sphere::new(Point3D::new(10.0, 0.0, 0.0), 1.0, Some(SurfaceMaterial{ color: Color::new(1.0, 0.0, 0.0), reflectivity: 1.0 }));
         marcher.add_scene_object(sphere);
         marcher.march();
         let(r, _g, _b) = marcher.get_color(0, 0).get_u8_components();

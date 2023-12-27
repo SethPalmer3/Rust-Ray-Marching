@@ -1,34 +1,5 @@
 use std::ops;
 
-// macro_rules! op_implement {
-//     ($impl_op: ident, $op: tt, $func_name: ident) => {
-//         impl ops::$impl_op for Point {
-//             type Output = Point;
-
-//             fn $func_name(self, rhs: Self) -> Self::Output {
-//                 Self {
-//                     x: self.x $op rhs.x,
-//                     y: self.y $op rhs.y,
-//                     z: self.z $op rhs.z,
-//                 }
-//             }
-//         }
-//     };
-//     ($impl_op: ident, $op: tt, $func_name: ident, $output: ty) => {
-//         impl ops::$impl_op<$output> for Point {
-//             type Output = Point;
-
-//             fn $func_name(self, rhs: $output) -> Self::Output {
-//                 Self {
-//                     x: self.x $op rhs,
-//                     y: self.y $op rhs,
-//                     z: self.z $op rhs,
-//                 }
-//             }
-//         }
-//     };
-// }
-
 macro_rules! impl_ops_for_point {
     ($trait:ident, $func:ident, $op:tt) => {
         impl ops::$trait<f64> for Point {
@@ -126,8 +97,12 @@ impl Direction {
         d1.x*d2.x + d1.y*d2.y + d1.z*d2.z
     }
     pub fn rotate_vector_around_z(&mut self, around_z: f64){
-        let len = self.length();
-        let current_around_z = (self.y / self.x).atan();
+        // let len = self.length();
+        let len = (self.x.powf(2.0) + self.y.powf(2.0)).sqrt();
+        let mut current_around_z = (self.y / self.x).atan();
+        if self.x < 0.0{
+            current_around_z = current_around_z + 180_f64.to_radians();
+        }
 
         let x_delta = len * (current_around_z + around_z).cos();
         let y_delta = len * (current_around_z + around_z).sin();
@@ -136,8 +111,12 @@ impl Direction {
         self.y = y_delta;
     }
     pub fn rotate_vector_around_y(&mut self, around_y: f64){
-        let len = self.length();
-        let current_around_y = (self.x / self.z).atan();
+        // let len = self.length();
+        let len = (self.x.powf(2.0) + self.z.powf(2.0)).sqrt();
+        let mut current_around_y = (self.x / self.z).atan();
+        if self.z < 0.0{
+            current_around_y = current_around_y + 180_f64.to_radians();
+        }
 
         let x_delta = len * (current_around_y + around_y).sin();
         let z_delta = len * (current_around_y + around_y).cos();

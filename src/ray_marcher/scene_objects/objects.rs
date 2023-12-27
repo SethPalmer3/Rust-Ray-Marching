@@ -1,7 +1,7 @@
 use crate::ray_marcher::color_data_types::Color;
 
 // use std::cmp;
-use super::{Point3D, SurfaceMaterial, SceneObject};
+use super::{Point3D, SurfaceMaterial, SceneObject, DEFAULT_SURFACEMAT};
 
 #[derive(Clone)]
 pub struct Sphere{
@@ -14,7 +14,7 @@ pub struct Sphere{
 impl Sphere {
 
     pub fn new(pos: Point3D, radius: f64, sm: Option<SurfaceMaterial>) -> Self {
-        Sphere {radius, position: pos, material: sm.unwrap_or(SurfaceMaterial { color: Color::new(0.0, 0.0, 0.0) })}
+        Sphere {radius, position: pos, material: sm.unwrap_or(DEFAULT_SURFACEMAT) }
     }
     
 }

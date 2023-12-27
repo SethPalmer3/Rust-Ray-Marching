@@ -7,6 +7,8 @@ pub struct Color {
     b: f64,
 } 
 
+pub static BLACK: Color = Color{ r: 0.0, g: 0.0, b: 0.0 };
+
 #[allow(dead_code)]
 fn between_0_1(i: f64) -> bool{
     0.0 <= i && i <= 1.0

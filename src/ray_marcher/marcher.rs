@@ -67,6 +67,7 @@ impl MarcherHandler {
 
     pub fn march(&mut self) -> screen::Screen<Color>{
         let num_bounce_const = self.num_steps;
+        let num_iters = self.num_iterations;
         let mut screen: screen::Screen<Color> = screen::Screen::new(self.camera.resolution);
         loop{
             self.rays.par_iter_mut().for_each(|ray| {
@@ -96,6 +97,7 @@ impl MarcherHandler {
             });
             self.num_steps -= 1;
             if self.num_steps <= 0 {
+                println!("{}%", 100_f64 - (self.num_iterations as f64 * 100_f64 / num_iters as f64));
                 self.num_iterations -= 1;
                 self.num_steps = num_bounce_const;
                 self.copy_colors(&mut screen);

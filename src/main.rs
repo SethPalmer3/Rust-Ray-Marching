@@ -20,7 +20,7 @@ fn main() {
         (width_res, height_res),
     );
     let mut march_handler =
-        ray_marcher::marcher::MarcherHandler::new(1000, marcher::MAX_DISTANCE, 50, camera);
+        ray_marcher::marcher::MarcherHandler::new(2000, marcher::MAX_DISTANCE, 100, camera);
     // march_handler.debug = true;
     march_handler.add_scene_object(Sphere::new(
         Point::new(30.0, -10.0, 0.0),

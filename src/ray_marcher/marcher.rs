@@ -8,7 +8,8 @@ use rayon::iter::{IntoParallelRefMutIterator, ParallelIterator};
 use super::color_data_types::Color;
 use super::scene::{Scene, ClosestObject};
 use super::scene_objects::{objects, SceneObject};
-use super::ray;
+use super::screen::{Screen, Displayable};
+use super::{ray, screen};
 use super::camera;
 
 #[allow(dead_code)]
@@ -64,8 +65,9 @@ impl MarcherHandler {
         }
     }
 
-    pub fn march(&mut self){
+    pub fn march(&mut self) -> screen::Screen<Color>{
         let num_bounce_const = self.num_steps;
+        let mut screen: screen::Screen<Color> = screen::Screen::new(self.camera.resolution);
         loop{
             self.rays.par_iter_mut().for_each(|ray| {
                 if ray.has_stopped() {
@@ -96,12 +98,14 @@ impl MarcherHandler {
             if self.num_steps <= 0 {
                 self.num_iterations -= 1;
                 self.num_steps = num_bounce_const;
+                self.copy_colors(&mut screen);
                 self.reset_rays();
                 if self.num_iterations <= 0 {
                     break;
                 }
             }
         }
+        screen
     }
 
     pub fn get_color(&self, x: u32, y: u32) -> Color {
@@ -111,8 +115,8 @@ impl MarcherHandler {
     }
 
     fn index_to_res_coords(cam_row: u32, cam_col: u32, i: usize) -> (u32, u32){
-        let c = i as u32 / cam_col;
-        let r = i as u32 % cam_row;
+        let c = i as u32 % cam_col;
+        let r = i as u32 / cam_row;
         (r, c)
     }
 
@@ -129,6 +133,19 @@ impl MarcherHandler {
             ray.set_position(p);
             ray.set_direction(d);
         }
+    }
+
+    fn copy_colors(&self, screen: &mut Screen<Color>){
+        let (res_rows, res_cols) = self.camera.resolution;
+        self.rays.iter().enumerate().for_each(|(i, ray)|{
+            let row = i as u32 / res_rows;
+            let col = i as u32 % res_cols;
+            let (r, g, b) = screen.get_color_components((row, col));
+            let new_color = (Color::new(r, g, b) + ray.get_color()) / 2_f64;
+            screen.set_red_channel((row, col), new_color.r());
+            screen.set_green_channel((row, col), new_color.g());
+            screen.set_blue_channel((row, col), new_color.b());
+        });
     }
 }
 

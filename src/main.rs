@@ -2,9 +2,10 @@ pub mod ray_marcher;
 
 use image::{self, RgbImage};
 use ray_marcher::{
-    color_data_types::Color,
+    color_data_types::{f64_to_u8, Color},
     marcher,
     scene_objects::{objects::Sphere, SurfaceMaterial},
+    screen::Displayable,
     threed_data_types::{Direction as Vector3D, Point},
 };
 
@@ -37,7 +38,7 @@ fn main() {
             reflectivity: 0.0,
         }),
     ));
-    march_handler.march();
+    let screen = march_handler.march();
 
     let mut image_buf: RgbImage = image::ImageBuffer::new(
         march_handler.get_camera().resolution.0,
@@ -45,9 +46,8 @@ fn main() {
     );
 
     for (x, y, pixel) in image_buf.enumerate_pixels_mut() {
-        let col = march_handler.get_color(x, y);
-        let (r, g, b) = col.get_u8_components();
-        *pixel = image::Rgb([r, g, b]);
+        let (r, g, b) = screen.get_color_components((x, y));
+        *pixel = image::Rgb([f64_to_u8(r), f64_to_u8(g), f64_to_u8(b)]);
     }
     image_buf.save("ray_marched.png").unwrap();
 }

@@ -1,5 +1,7 @@
 use std::ops;
 
+use super::screen::Pixelatable;
+
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub struct Color {
     r: f64,
@@ -7,11 +9,47 @@ pub struct Color {
     b: f64,
 } 
 
+pub fn f64_to_u8(c: f64) -> u8 {
+    (c * 255_f64) as u8
+}
+
 pub static BLACK: Color = Color{ r: 0.0, g: 0.0, b: 0.0 };
 
 #[allow(dead_code)]
 fn between_0_1(i: f64) -> bool{
     0.0 <= i && i <= 1.0
+}
+
+impl Pixelatable for Color {
+    fn get_red_channel(&self) -> Self::Component {
+        self.r()
+    }
+
+    fn get_green_channel(&self) -> Self::Component {
+        self.g()
+    }
+
+    fn get_blue_channel(&self) -> Self::Component {
+        self.b()
+    }
+
+    fn set_red_channel(&mut self, new_r: Self::Component) {
+        self.r = new_r;
+    }
+
+    fn set_green_channel(&mut self, new_g: Self::Component) {
+        self.g = new_g;
+    }
+
+    fn set_blue_channel(&mut self, new_b: Self::Component) {
+        self.b = new_b;
+    }
+
+    type Component = f64;
+
+    fn new() -> Self {
+        Color::new(1.0, 1.0, 1.0)
+    }
 }
 
 impl Color{
@@ -141,7 +179,9 @@ macro_rules! color_op_assign_impl {
 }
 
 color_op_impl!(Add, +, add);
+color_op_impl!(Sub, -, sub);
 color_op_impl!(Mul, *, mul);
+color_op_impl!(Div, /, div);
 color_op_assign_impl!(AddAssign, +=, add_assign);
 color_op_assign_impl!(SubAssign, -=, sub_assign);
 color_op_assign_impl!(MulAssign, *=, mul_assign);

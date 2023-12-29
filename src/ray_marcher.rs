@@ -5,6 +5,7 @@ pub mod scene;
 pub mod ray;
 pub mod marcher;
 pub mod camera;
+pub mod screen;
 
 
 #[allow(unused_imports)]

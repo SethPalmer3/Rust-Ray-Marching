@@ -40,7 +40,14 @@ mod test {
 
     #[test]
     fn test_sphere_sdf_x() {
-        let s = Sphere::new(Point3D::new(0.0, 0.0, 0.0), 1.0, None);
+        let s = {
+            let pos = Point3D::new(0.0, 0.0, 0.0);
+            Sphere {
+                radius: 1.0,
+                position: pos,
+                material: None.unwrap_or(DEFAULT_SURFACEMAT),
+            }
+        };
         let p = Point3D::new(2.0, 0.0, 0.0);
         assert_eq!(s.signed_distance(&p), 1.0);
     }

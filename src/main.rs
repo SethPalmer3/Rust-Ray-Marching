@@ -10,8 +10,8 @@ use ray_marcher::{
 };
 
 fn main() {
-    let height_res = 600;
-    let width_res = 600;
+    let height_res = 200;
+    let width_res = 200;
     let camera = ray_marcher::camera::Camera::new(
         Point::new(0.0, 0.0, 0.0),
         Vector3D::new(1.0, 0.0, 0.0).get_norm(),
@@ -20,7 +20,7 @@ fn main() {
         (width_res, height_res),
     );
     let mut march_handler =
-        ray_marcher::marcher::MarcherHandler::new(2000, marcher::MAX_DISTANCE, 100, camera);
+        ray_marcher::marcher::MarcherHandler::new(500, marcher::MAX_DISTANCE, 500, camera);
     // march_handler.debug = true;
     march_handler.add_scene_object(Sphere::new(
         Point::new(30.0, -10.0, 0.0),

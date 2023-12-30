@@ -1,4 +1,5 @@
-use std::ops::{Add, Mul};
+use core::f64;
+use std::ops::{Add, Mul, MulAssign};
 
 pub trait Pixelatable {
     type Component;
@@ -15,6 +16,7 @@ pub trait Pixelatable {
 
 pub trait Displayable {
     type Component;
+    type Unit;
     fn get_red_channel(&self, index: (u32, u32)) -> Self::Component;
     fn get_green_channel(&self, index: (u32, u32)) -> Self::Component;
     fn get_blue_channel(&self, index: (u32, u32)) -> Self::Component;
@@ -24,6 +26,7 @@ pub trait Displayable {
     fn set_blue_channel(&mut self, index: (u32, u32), new_b: Self::Component);
 
     fn get_color_components(&self, index: (u32, u32)) -> (Self::Component, Self::Component, Self::Component);
+    fn set_color_components(&mut self, index: (u32, u32), display_unit: &Self::Unit);
 
     fn get_resolution(&self) -> (u32, u32);
 }
@@ -38,7 +41,7 @@ where
 
 impl<P> Screen<P> 
 where
-    P: Pixelatable + Add + Mul,
+    P: Pixelatable + Add + Mul<P> + Mul<f64> + MulAssign<f64>,
 {
     pub fn new(res: (u32, u32)) -> Self{
         let mut v = Vec::<P>::new();
@@ -46,6 +49,16 @@ where
             v.push(P::new());
         });
         Self { pixels: v, resolution: res }
+    }
+}
+
+impl<P> Screen<P> 
+where
+    P: Pixelatable + Add + Mul<P, Output = P> + Mul<f64, Output = P> + MulAssign<f64>{
+    pub fn apply_reciperical(&mut self, reciperical: f64){
+        self.pixels.iter_mut().for_each(|p| {
+            *p *= reciperical
+        })
     }
 }
 
@@ -115,9 +128,17 @@ where
         )
     }
 
+    fn set_color_components(&mut self, index: (u32, u32), display_unit: &Self::Unit){
+        self.set_red_channel(index, display_unit.get_red_channel());
+        self.set_green_channel(index, display_unit.get_green_channel());
+        self.set_blue_channel(index, display_unit.get_blue_channel());
+    }
+
     fn get_resolution(&self) -> (u32, u32) {
         self.resolution
     }
 
     type Component = P::Component ;
+
+    type Unit = P;
 }

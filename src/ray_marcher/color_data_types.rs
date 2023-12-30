@@ -55,7 +55,7 @@ impl Pixelatable for Color {
 impl Color{
     pub fn new(r: f64, g: f64, b: f64) -> Self {
         let mut s = Color { r, g, b };
-        s.clamp();
+        // s.clamp();
         s
     }
 
@@ -141,7 +141,7 @@ macro_rules! color_op_impl {
 
             fn $impl_op_func(self, rhs: Self) -> Self::Output {
                 let mut s = Self { r: self.r $op rhs.r, g: self.g $op rhs.g, b: self.b $op rhs.b };
-                s.clamp();
+                // s.clamp();
                 s
             }
         }
@@ -150,7 +150,7 @@ macro_rules! color_op_impl {
 
             fn $impl_op_func(self, rhs: f64) -> Self::Output {
                 let mut s = Self { r: self.r $op rhs, g: self.g $op rhs, b: self.b $op rhs };
-                s.clamp();
+                // s.clamp();
                 s
             }
         }
@@ -164,7 +164,7 @@ macro_rules! color_op_assign_impl {
                 self.r $op rhs.r;
                 self.g $op rhs.g;
                 self.b $op rhs.b;
-                self.clamp();
+                // self.clamp();
             }
         }
         impl ops::$impl_op<f64> for Color {
@@ -172,7 +172,7 @@ macro_rules! color_op_assign_impl {
                 self.r $op rhs;
                 self.g $op rhs;
                 self.b $op rhs;
-                self.clamp();
+                // self.clamp();
             }
         }
     };

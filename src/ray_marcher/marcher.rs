@@ -68,6 +68,7 @@ impl MarcherHandler {
     pub fn march(&mut self) -> screen::Screen<Color>{
         let num_bounce_const = self.num_steps;
         let num_iters = self.num_iterations;
+        let reciperical = 1_f64 / self.num_iterations as f64;
         let mut screen: screen::Screen<Color> = screen::Screen::new(self.camera.resolution);
         loop{
             self.rays.par_iter_mut().for_each(|ray| {
@@ -96,17 +97,19 @@ impl MarcherHandler {
                 }
             });
             self.num_steps -= 1;
-            if self.num_steps <= 0 {
-                println!("{}%", 100_f64 - (self.num_iterations as f64 * 100_f64 / num_iters as f64));
-                self.num_iterations -= 1;
-                self.num_steps = num_bounce_const;
-                self.copy_colors(&mut screen);
-                self.reset_rays();
-                if self.num_iterations <= 0 {
-                    break;
-                }
+            if self.num_steps > 0 {
+                continue;
+            }
+            println!("{:.1}%", 100_f64 - (self.num_iterations as f64 * 100_f64 / num_iters as f64));
+            self.num_iterations -= 1;
+            self.num_steps = num_bounce_const;
+            self.copy_colors(&mut screen);
+            self.reset_rays();
+            if self.num_iterations <= 0 {
+                break;
             }
         }
+        screen.apply_reciperical(reciperical);
         screen
     }
 
@@ -143,10 +146,8 @@ impl MarcherHandler {
             let row = i as u32 / res_rows;
             let col = i as u32 % res_cols;
             let (r, g, b) = screen.get_color_components((row, col));
-            let new_color = (Color::new(r, g, b) + ray.get_color()) / 2_f64;
-            screen.set_red_channel((row, col), new_color.r());
-            screen.set_green_channel((row, col), new_color.g());
-            screen.set_blue_channel((row, col), new_color.b());
+            let new_color = Color::new(r, g, b) + ray.get_color() ;
+            screen.set_color_components((row, col), &new_color);
         });
     }
 }

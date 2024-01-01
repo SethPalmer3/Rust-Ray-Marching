@@ -1,4 +1,5 @@
 pub mod ray_marcher;
+pub mod progress_indicator;
 
 use image::{self, RgbImage};
 use ray_marcher::{
@@ -20,7 +21,7 @@ fn main() {
         (width_res, height_res),
     );
     let mut march_handler =
-        ray_marcher::marcher::MarcherHandler::new(500, marcher::MAX_DISTANCE, 500, camera);
+        ray_marcher::marcher::MarcherHandler::new(200, marcher::MAX_DISTANCE, 500, camera);
     // march_handler.debug = true;
     march_handler.add_scene_object(Sphere::new(
         Point::new(30.0, -10.0, 0.0),
@@ -36,6 +37,14 @@ fn main() {
         Some(SurfaceMaterial {
             color: Color::new(0.0, 0.0, 1.0),
             reflectivity: 0.0,
+        }),
+    ));
+    march_handler.add_scene_object(Sphere::new(
+        Point::new(30.0, 0.0, 10.0),
+        10.0,
+        Some(SurfaceMaterial {
+            color: Color::new(0.0, 1.0, 0.0),
+            reflectivity: 0.5,
         }),
     ));
     let screen = march_handler.march();

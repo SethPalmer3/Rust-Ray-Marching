@@ -43,6 +43,9 @@ impl Ray {
     pub fn get_num_hits(&self) -> i32 {
         self.num_hits
     }
+    pub fn reset_num_hits(&mut self) {
+        self.num_hits = 0;
+    }
     pub fn reflect(&mut self, surf_normal: &Vector3D, _back_off_dist: f64) {
         let normal = surf_normal.get_norm();
         self.direction -= normal * 2.0 * Vector3D::get_dot(&self.direction, &normal);
@@ -68,6 +71,9 @@ impl Ray {
         );
 
         self.reflect(&normal, back_off_dist)
+    }
+    pub fn go(&mut self) {
+        self.must_stop = false;
     }
     pub fn stop(&mut self) {
         self.must_stop = true;

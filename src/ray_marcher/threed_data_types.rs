@@ -1,50 +1,7 @@
-use std::ops;
+pub mod point_operations;
+pub mod direction_operations;
 
-macro_rules! impl_ops_for_point {
-    ($trait:ident, $func:ident, $op:tt) => {
-        impl ops::$trait<f64> for Point {
-            fn $func(&mut self, rhs: f64) {
-                self.x $op rhs;
-                self.y $op rhs;
-                self.z $op rhs;
-            }
-        }
-        impl ops::$trait<Point> for Point {
-            fn $func(&mut self, rhs: Point) {
-                self.x $op rhs.x;
-                self.y $op rhs.y;
-                self.z $op rhs.z;
-            }
-        }
-    };
-    ($trait:ident, $func:ident, $op:tt, $output:ty) => {
-        impl ops::$trait<f64> for Point {
-            type Output = Point;
-
-            fn $func(self, rhs: f64) -> Self::Output {
-                Self {x: self.x $op rhs, y: self.y $op rhs, z: self.z $op rhs}
-            }
-        }
-        impl ops::$trait<Point> for Point {
-            type Output = Point;
-
-            fn $func(self, rhs: Point) -> Self::Output {
-                Self {x: self.x $op rhs.x, y: self.y $op rhs.y, z: self.z $op rhs.z}
-            }
-        }
-    };
-}
-
-impl_ops_for_point!(AddAssign, add_assign, +=);
-impl_ops_for_point!(SubAssign, sub_assign, -=);
-impl_ops_for_point!(MulAssign, mul_assign, *=);
-impl_ops_for_point!(DivAssign, div_assign, /=);
-
-impl_ops_for_point!(Add, add, +, f64);
-impl_ops_for_point!(Sub, sub, -, f64);
-impl_ops_for_point!(Mul, mul, *, f64);
-impl_ops_for_point!(Div, div, /, f64);
-//-------- Point ------------------
+//-------- Point Vector -----------
 
 #[allow(dead_code)]
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -133,53 +90,8 @@ impl Direction {
     }
 }
 
-macro_rules! impl_ops_assign_for_direction {
-    ($trait:ident, $func:ident, $op:tt) => {
-        impl ops::$trait<Direction> for Direction {
-            fn $func(&mut self, rhs: Direction) {
-                self.x $op rhs.x;
-                self.y $op rhs.y;
-                self.z $op rhs.z;
-            }
-        }
-        impl ops::$trait<f64> for Direction {
-            fn $func(&mut self, rhs: f64) {
-                self.x $op rhs;
-                self.y $op rhs;
-                self.z $op rhs;
-            }
-        }
-    };
-}
-macro_rules! impl_ops_for_direction {
-    ($trait: ident, $func: ident, $op:tt) => {
-        impl ops::$trait<Direction> for Direction {
-            type Output = Direction;
-            fn $func(self, rhs: Direction) -> Self::Output{
-                Direction { x: self.x $op rhs.x, y: self.y $op rhs.y, z: self.z $op rhs.z}
-            }
-        }
-        impl ops::$trait<f64> for Direction {
-            type Output = Direction;
-            fn $func(self, rhs: f64) -> Self::Output{
-                Direction { x: self.x $op rhs, y: self.y $op rhs, z: self.z $op rhs}
-            }
-        }
-    };
-}
-
-impl_ops_assign_for_direction!(AddAssign, add_assign, +=);
-impl_ops_assign_for_direction!(SubAssign, sub_assign, -=);
-impl_ops_assign_for_direction!(MulAssign, mul_assign, *=);
-impl_ops_assign_for_direction!(DivAssign, div_assign, /=);
-
-impl_ops_for_direction!(Add, add, +);
-impl_ops_for_direction!(Sub, sub, -);
-impl_ops_for_direction!(Mul, mul, *);
-impl_ops_for_direction!(Div, div, /);
-
-
 //---------- Constants ------------
+
 pub mod constants {
     use super::*;
     pub static ORIGIN: Point = Point{x: 0.0, y: 0.0, z: 0.0};

@@ -1,17 +1,11 @@
 use crate::progress_indicator::ProgressHandler;
-use std::f64::consts::PI;
-
-use super::super::progress_indicator;
 
 use rand::Rng;
-
-use rayon;
-use rayon::iter::{IntoParallelRefMutIterator, ParallelIterator};
 
 use super::camera;
 use super::color_data_types::Color;
 use super::scene::{ClosestObject, Scene};
-use super::scene_objects::{objects, SceneObject};
+use super::scene_objects::SceneObject;
 use super::screen::{Displayable, Screen};
 use super::{ray, screen};
 
@@ -33,7 +27,7 @@ pub struct MarcherHandler {
     num_iterations: u32,
     max_distance: f64,
     rays: Vec<ray::Ray>,
-    scene: Scene<objects::Sphere>,
+    scene: Scene,
     camera: camera::Camera,
     pub debug: bool,
 }
@@ -63,7 +57,10 @@ impl MarcherHandler {
         &self.camera
     }
 
-    pub fn add_scene_object(&mut self, o: objects::Sphere) {
+    pub fn add_scene_object<T>(&mut self, o: T)
+    where
+        T: SceneObject + 'static,
+    {
         self.scene.add_scene_object(o);
     }
 
@@ -87,9 +84,8 @@ impl MarcherHandler {
         let mut screen: screen::Screen<Color> = screen::Screen::new(self.camera.resolution);
         let mut prog_handler = ProgressHandler::new();
         loop {
-            self.rays.par_iter_mut().for_each(|ray| {
+            self.rays.iter_mut().for_each(|ray| {
                 if ray.has_stopped() {
-                    // println!("stopped - {}", i);
                     return;
                 }
                 let closest_obj = self.scene.get_closest_object(ray.get_position());
@@ -167,8 +163,10 @@ impl MarcherHandler {
             let rand_z = (rng.gen::<f64>() * 2.0) - 1.0;
             d.rotate_vector(rand_z * MIN_ANGLE, rand_y * MIN_ANGLE);
             ray.color = Color::new(0.0, 0.0, 0.0);
+            if ray.get_num_hits() > 0 {
+                ray.go();
+            }
             ray.reset_num_hits();
-            ray.go();
             ray.set_position(p);
             ray.set_direction(d);
         }

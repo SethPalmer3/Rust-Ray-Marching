@@ -14,24 +14,38 @@ impl Camera {
     }
 
     pub fn get_near_plane_point(&self, r: u32, c: u32) -> (Point3D, Vector3D){
-        let pos_delta = self.view_direction * self.near_plane_dist; // init direction
+        let pos_delta = self.view_direction * self.near_plane_dist;
 
-        let mut horz_vector = pos_delta.clone();
-        horz_vector.rotate_vector_around_y(-90_f64.to_radians());
+        // Precompute sin and cos for the angles
+        let sin_minus_90 = -1.0; // sin(-90°)
+        let cos_minus_90 = 0.0;  // cos(-90°)
+        let sin_90 = 1.0;        // sin(90°)
+        let cos_90 = 0.0;        // cos(90°)
+
+        // Compute horizontal and vertical vectors without cloning and normalize them
+        let mut horz_vector = Vector3D::new(
+            pos_delta.x * cos_minus_90 - pos_delta.z * sin_minus_90,
+            pos_delta.y,
+            pos_delta.x * sin_minus_90 + pos_delta.z * cos_minus_90,
+        );
         horz_vector.set_norm();
-        let mut vert_vector = pos_delta.clone();
-        vert_vector.rotate_vector_around_z(90_f64.to_radians());
+        let mut vert_vector = Vector3D::new(
+            pos_delta.x * cos_90 - pos_delta.y * sin_90,
+            pos_delta.x * sin_90 + pos_delta.y * cos_90,
+            pos_delta.z,
+        );
         vert_vector.set_norm();
 
-        let horz_vector_len_delta = self.camera_angle * 
-            (((2.0 * r as f64) /
-            self.resolution.0 as f64) - 
-            1.0);
-        let vert_cam_angle = self.camera_angle * (self.resolution.1 as f64 / self.resolution.0 as f64);
-        let vert_vector_len_delta = vert_cam_angle * (1.0 - ((2.0 * c as f64) / self.resolution.1 as f64));
+        // Precompute aspect ratio and camera angles if they are constant
+        let aspect_ratio = self.resolution.1 as f64 / self.resolution.0 as f64;
+        let vert_cam_angle = self.camera_angle * aspect_ratio;
+
+        let horz_vector_len_delta = self.camera_angle * (2.0 * r as f64 / self.resolution.0 as f64 - 1.0);
+        let vert_vector_len_delta = vert_cam_angle * (1.0 - 2.0 * c as f64 / self.resolution.1 as f64);
 
         horz_vector *= horz_vector_len_delta;
         vert_vector *= vert_vector_len_delta;
+
         let p = (pos_delta + horz_vector + vert_vector).to_point();
         let d = (p - self.position).to_direction().get_norm();
 
